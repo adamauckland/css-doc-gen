@@ -4,6 +4,24 @@ import sys
 
 
 class CssItem(object):
+    """
+    This object generates some output for one single atom of CSS.
+
+    What is an atom? A single bit of comment + CSS selector + CSS definition.
+
+    The comments are expected to hold the tags in.
+
+    The selector could be any sort of CSS. Examples of valid selectors:
+
+        a, br, hr
+
+        p
+
+        .main, .stuff
+
+    Currently, multi-line example comments are not supported. I'm not really sure how the parser will handle them
+
+    """
     known_comment_tags = ['description', 'example', 'version', 'class']
 
     def __init__(self):
@@ -27,6 +45,9 @@ class CssItem(object):
             context['comments_%s' % tag] = ''
         #
         # unpack comments
+        #
+        # This will unpack all available comments in the declaration into
+        # comments_THINGYHERE
         #
         for loop_key, loop_value in self.comments.items():
             context['comments_%s' % loop_key] = loop_value
@@ -53,7 +74,7 @@ class CssItem(object):
             </div>
 
         """
-        #return 'Element: %s\n%s\n%s\nAtom:\n%s' % (self.selector, self.comments, self.definition, self.atom)
+
         return template % context
 
 
@@ -124,16 +145,6 @@ class CssChomper(object):
 
         self.chomp_stack.append(css_item)
 
-        #
-        # look for anything inside me
-        #
-        #css_object = CssChomper(self.chomp_stack)
-        #css_object.parse(self.definition_text)
-
-        #print('\n\nselector %s' % '\n'.join(self.finished_selector_buffer))
-        #print('Comment buffer: %s' % self.comment_buffer)
-        #print('definition  { %s }' % self.definition_text)
-
     def look_for_comments(self):
         for line in self.selector_text.split('\n'):
             comment_index = line.find('//')
@@ -172,7 +183,6 @@ class ParseReader(object):
             if len(loop_item.comments) > 0:
                 internal_items.append(unicode(loop_item))
 
-
         output = """
         <html>
             <head>
@@ -192,39 +202,6 @@ class ParseReader(object):
 
             with open(output_file, 'wt') as output_handle:
                 output_handle.write(output)
-        #self.log(data)
-
-
-    def parse_line(self, original_line):
-        #self.log('Parse: %s' % original_line)
-
-        line = original_line
-        comment_index = line.find('//')
-        open_brace_index = line.find('{')
-
-        #
-        # Found a comment
-        #
-        if comment_index > -1:
-            line = line[comment_index + 2:]
-            at_index = line.find('@')
-            if at_index != -1:
-                at_split = line.split('@')
-                at_key = at_split[1].split(' ')[0].strip()
-                at_value = line[at_index + len(at_key) + 1:].strip()
-
-                #self.log('\t\t%s --> %s' % (at_key, at_value))
-                self.comment_buffer[at_key] = at_value
-
-        #
-        # Push output onto stack
-        if line.find('}') != -1:
-            if len(self.comment_buffer) > 0:
-                new_object = CssObject()
-                new_object.comments = self.comment_buffer
-                self.css_objects.append(new_object)
-
-            self.comment_buffer = {}
 
 
 class CssDoc(object):

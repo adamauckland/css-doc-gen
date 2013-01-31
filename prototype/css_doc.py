@@ -5,30 +5,28 @@ import sys
 
 class ParseReader(object):
     def __init__(self):
-        self.comment_mode = False
-        self.inline_comment = False
-        self.block_comment = False
-        self.comment_buffer = []
+        self.comment_buffer = {}
+        self.css_match_buffer = []
 
-    def parse_line(self, line):
-        self.inline_comment = False
-        inline_index = line.find('//')
-        block_comment_index = line.find('/*')
-        comment_block = line
+    def parse_line(self, original_line):
+        self.log('Parse: %s' % original_line)
 
-        if inline_index > -1 and block_comment_index > -1:
-            if inline_index < block_comment_index:
-                self.inline_comment = True
-            else:
-                self.block_comment = True
+        line = original_line
+        comment_index = line.find('//')
 
-        if inline_index > -1:
-            comment_block = comment_block[inline_index + 2:]
-        now_find = comment_block.find('/*')
-        if now_find > -1:
-            comment_block = comment_block[now_find + 2:]
+        #
+        # Found a comment
+        #
+        if comment_index > -1:
+            line = line[comment_index + 2:]
+            at_index = line.find('@')
+            if at_index != -1:
+                at_split = line.split('@')
+                at_key = at_split[1].split(' ')[0].strip()
+                at_value = line[at_index + len(at_key) + 1:].strip()
 
-        print(comment_block)
+                self.log('\t\t%s --> %s' % (at_key, at_value))
+                self.comment_buffer[at_key] = at_value
 
 
 class CssDoc(object):
@@ -58,7 +56,7 @@ class CssDoc(object):
 
     def parse_file(self, loop_key, loop_data):
         parser = ParseReader()
-
+        parser.log = self.log
         for loop_line in loop_data.split('\n'):
             parser.parse_line(loop_line)
 
@@ -68,7 +66,7 @@ def log(text):
 
 
 if __name__ == '__main__':
-    if len(sys.argv < 2):
+    if len(sys.argv) < 2:
         print('Pass in the root of SCSS ')
     else:
         root_directory = sys.argv[1]

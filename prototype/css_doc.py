@@ -4,14 +4,57 @@ import sys
 
 
 class CssItem(object):
+    known_comment_tags = ['description', 'example', 'version', 'class']
+
     def __init__(self):
         self.selector = None
         self.comments = {}
         self.definition = None
         self.atom = None
 
-    def __str__(self):
-        return 'Element: %s\n%s\n%s\nAtom:\n%s' % (self.selector, self.comments, self.definition, self.atom)
+    def __unicode__(self):
+        context = {
+            'selector': self.selector,
+            'comments': self.comments,
+            'definition': self.definition,
+            'atom': self.atom,
+        }
+
+        #
+        # set defaults
+        #
+        for tag in CssItem.known_comment_tags:
+            context['comments_%s' % tag] = ''
+        #
+        # unpack comments
+        #
+        for loop_key, loop_value in self.comments.items():
+            context['comments_%s' % loop_key] = loop_value
+
+        template = """
+            <div>
+                <h2> %(selector)s </h2>
+
+                <div>
+                    <h3>Description</h3>
+                    <p>%(comments_description)s </p>
+                </div>
+
+                <div>
+                    <h3>Example</h3>
+                    %(comments_example)s
+                </div>
+
+                <div>
+                    <h3>How to do it</h3>
+                    <code><xmp>%(comments_example)s </xmp></code>
+                </div>
+
+            </div>
+
+        """
+        #return 'Element: %s\n%s\n%s\nAtom:\n%s' % (self.selector, self.comments, self.definition, self.atom)
+        return template % context
 
 
 class CssChomper(object):
@@ -123,10 +166,31 @@ class ParseReader(object):
         css_object = CssChomper(chomp_stack)
         css_object.parse(data)
 
+        internal_items = []
+
         for loop_item in chomp_stack:
             if len(loop_item.comments) > 0:
-                print(loop_item)
+                internal_items.append(unicode(loop_item))
 
+
+        output = """
+        <html>
+            <body>
+                <div>File: %s</div>
+                <div>%s</div>
+            </body>
+        </html>
+
+        """ % (filename, '\n'.join(internal_items))
+
+        if len(internal_items) > 0:
+            output_directory = os.path.abspath('./output')
+            output_file = os.path.join(output_directory, filename.replace('/', '_') + '.html')
+            if not os.path.exists(output_directory):
+                os.makedirs(output_directory)
+
+            with open(output_file, 'wt') as output_handle:
+                output_handle.write(output)
         #self.log(data)
 
 

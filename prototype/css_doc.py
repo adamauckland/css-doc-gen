@@ -30,6 +30,7 @@ class ParseReader(object):
 
         print(comment_block)
 
+
 class CssDoc(object):
     def parse(self, root_directory):
         self.log('Parsing directory: %s' % root_directory)
@@ -67,7 +68,10 @@ def log(text):
 
 
 if __name__ == '__main__':
-    root_directory = sys.argv[1]
-    css_doc = CssDoc()
-    css_doc.log = log
-    css_doc.parse(root_directory)
+    if len(sys.argv < 2):
+        print('Pass in the root of SCSS ')
+    else:
+        root_directory = sys.argv[1]
+        css_doc = CssDoc()
+        css_doc.log = log
+        css_doc.parse(root_directory)

@@ -175,6 +175,9 @@ class ParseReader(object):
 
         output = """
         <html>
+            <head>
+                <link rel="stylesheet" href="style.css" />
+            </head>
             <body>
                 <div>File: %s</div>
                 <div>%s</div>
@@ -186,8 +189,6 @@ class ParseReader(object):
         if len(internal_items) > 0:
             output_directory = os.path.abspath('./output')
             output_file = os.path.join(output_directory, filename.replace('/', '_') + '.html')
-            if not os.path.exists(output_directory):
-                os.makedirs(output_directory)
 
             with open(output_file, 'wt') as output_handle:
                 output_handle.write(output)
@@ -227,7 +228,15 @@ class ParseReader(object):
 
 
 class CssDoc(object):
-    def parse(self, root_directory):
+    def parse(self, root_directory, css_file):
+        output_directory = os.path.abspath('./output')
+        if not os.path.exists(output_directory):
+            os.makedirs(output_directory)
+        with open(css_file, 'rt') as read_handle:
+            read_buffer = read_handle.read()
+            with open(os.path.join(output_directory, 'style.css'), 'wt') as write_handle:
+                write_handle.write(read_buffer)
+
         self.log('Parsing directory: %s' % root_directory)
         files = {}
         self.scan_directory(files, root_directory, root_directory)
@@ -263,9 +272,9 @@ def log(text):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print('Pass in the root of SCSS ')
+        print('Pass in the root of SCSS and filepath to css file ')
     else:
         root_directory = sys.argv[1]
         css_doc = CssDoc()
         css_doc.log = log
-        css_doc.parse(root_directory)
+        css_doc.parse(root_directory, sys.argv[2])

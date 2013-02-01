@@ -196,6 +196,12 @@ class ParseReader(object):
         self.css_objects = []
 
     def parse_doc(self, filename, data):
+        """
+        Generate documentation for data.
+
+        Note: filename is considered a relative filename from the script location,
+        not the full filename.
+        """
         self.log(filename)
         chomp_stack = []
 

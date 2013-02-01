@@ -31,6 +31,9 @@ class CssItem(object):
         self.atom = None
 
     def __unicode__(self):
+        """
+        Generate the documentation for this CssItem
+        """
         context = {
             'selector': self.selector,
             'comments': self.comments,
@@ -97,10 +100,16 @@ class CssChomper(object):
         return repr(self.comments)
 
     def parse(self, data):
+        """
+        Feed the parser with the characters from the buffer
+        """
         for loop_character in data:
             self.chomp(loop_character)
 
     def chomp(self, character):
+        """
+        Read a character and do something with it
+        """
         self.buffer.append(character)
 
         is_control_character = False
@@ -132,6 +141,9 @@ class CssChomper(object):
             self.definition.append(character)
 
     def output(self):
+        """
+        Add all the details for the CssItem onto the stack
+        """
         self.selector_text = ''.join(self.selector)
         self.definition_text = ''.join(self.definition)
 
@@ -146,6 +158,13 @@ class CssChomper(object):
         self.chomp_stack.append(css_item)
 
     def look_for_comments(self):
+        """
+        Look for any comments in the selector block and attempt to parse
+        into [@key value] pairs.
+
+        If a line contains a comment and no @key, attempt to concatenate
+        onto the last found key.
+        """
         last_key = None
         for line in self.selector_text.split('\n'):
             comment_index = line.find('//')
@@ -228,6 +247,9 @@ class CssDoc(object):
             self.parse_file(loop_key, loop_item)
 
     def scan_directory(self, files, root_directory, new_directory):
+        """
+        Scan a directory for SCSS files
+        """
         try:
             for loop_file in os.listdir(new_directory):
                 loop_filename = os.path.join(new_directory, loop_file)

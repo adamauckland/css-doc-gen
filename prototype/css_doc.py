@@ -146,6 +146,7 @@ class CssChomper(object):
         self.chomp_stack.append(css_item)
 
     def look_for_comments(self):
+        last_key = None
         for line in self.selector_text.split('\n'):
             comment_index = line.find('//')
             #
@@ -156,10 +157,15 @@ class CssChomper(object):
                 at_index = line.find('@')
                 if at_index != -1:
                     at_split = line.split('@')
+
                     at_key = at_split[1].split(' ')[0].strip()
                     at_value = line[at_index + len(at_key) + 1:].strip()
 
                     self.comment_buffer[at_key] = at_value
+                    last_key = at_key
+                else:
+                    if last_key:
+                        self.comment_buffer[last_key] += '\n' + line
             else:
                 self.finished_selector_buffer.append(line)
 

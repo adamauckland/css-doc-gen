@@ -166,13 +166,31 @@ class CssChomper(object):
         onto the last found key.
         """
         last_key = None
+        is_in_comments = False
         for line in self.selector_text.split('\n'):
+            print(line)
             comment_index = line.find('//')
+            block_comment_index = line.find('/*')
+
+            if block_comment_index > comment_index:
+                comment_index = block_comment_index
+                is_in_comments = True
+
+            if is_in_comments:
+                if line.find('*/') != -1:
+                    print('coming out of comments')
+                    is_in_comments = False
+                    comment_index = -1
+                    block_comment_index = -1
+                else:
+                    if line.find('*') != -1:
+                        comment_index = line.find('*')
             #
             # Found a comment
             #
             if comment_index > -1:
                 line = line[comment_index + 2:]
+                print('\t%s' % line)
                 at_index = line.find('@')
                 if at_index != -1:
                     at_split = line.split('@')

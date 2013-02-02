@@ -6,9 +6,10 @@ Generate useful documentation from CSS. This is in no way a finished product, ju
 Requirements
 ------------
 
-Currently uses [http://jinja.pocoo.org/docs/](Jinja2) for the templating. Install it by:
+Currently uses (http://jinja.pocoo.org/docs/)[Jinja2] for the templating. Install it by doing either:
 
 	easy_install Jinja2
+	pip install Jinja2
 
 Annotate your SCSS
 ------------------

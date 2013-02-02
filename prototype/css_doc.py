@@ -166,6 +166,7 @@ class CssChomper(object):
             #
             if self.entry_count == 0:
                 self.output()
+                self.reset()
 
         if not is_control_character:
             if not self.entered_definition:
@@ -231,11 +232,15 @@ class CssChomper(object):
                     at_key = at_split[1].split(' ')[0].strip()
                     at_value = line[at_index + len(at_key) + 1:].strip()
 
-                    self.comment_buffer[at_key] = at_value
+                    if at_value.strip() != '':
+                        self.comment_buffer[at_key] = at_value
                     last_key = at_key
                 else:
                     if last_key:
-                        self.comment_buffer[last_key] += '\n' + line
+                        if line.strip() != '':
+                            if last_key not in self.comment_buffer:
+                                self.comment_buffer[last_key] = ''
+                            self.comment_buffer[last_key] += '\n' + line
             else:
                 self.finished_selector_buffer.append(line)
 

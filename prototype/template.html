@@ -1,15 +1,22 @@
+<!--
+	This is a Jinja2 template. See http://jinja.pocoo.org/docs/templates/ for details
+-->
 <html>
 	<head>
+		<!-- link in copied stylesheets -->
 		{% for loop_stylesheet in settings.CSS_OUTPUT_FILES %}
 			<link rel="stylesheet" href="{{ loop_stylesheet }}" ></link>
 		{% endfor %}
 	</head>
-	<body>
-		<div>{{ filename }}</div>
 
+	<body>
+		<!-- Loop through each partial -->
 		{% for loop_partial in items %}
+
+			<!-- Output the partial filename -->
 			<div>{{ loop_partial.partial_name }}</div>
 
+			<!-- Now loop through each CSS atom in the partial -->
 			{% for loop_item in loop_partial.items %}
 				<div>
 					<h2>{{ loop_item.selector }}</h2>
@@ -21,8 +28,11 @@
 						{% endif %}
 					{% endfor %}
 
+					<!-- Output all other comment tags -->
 					<p>
 						{% for comment_key,comment_value in loop_item.comments.items() %}
+
+							<!-- Example should show the escaped HTML plus what it looks like? -->
 							{% if comment_key == 'example' %}
 								<h3>Example</h3>
 								<div>
@@ -31,8 +41,13 @@
 
 								<h3>HTML for this</h3>
 								<pre><code>{{ comment_value|e }}</code></pre>
+
 							{% elif comment_key == 'main_description' %}
+
+								<!-- Ignore main_description, we added it above -->
+
 							{% else %}
+								<!-- Output everything else -->
 								<div>
 									<strong>{{ comment_key }}</strong> <span>{{ comment_value }}</span>
 								</div>

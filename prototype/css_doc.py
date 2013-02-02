@@ -22,6 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+import inspect
 import os
 import os.path
 import sys
@@ -252,7 +253,6 @@ class ParseReader(object):
         Note: filename is considered a relative filename from the script location,
         not the full filename.
         """
-        self.log(filename)
         chomp_stack = []
 
         css_object = CssChomper(chomp_stack)
@@ -369,10 +369,23 @@ def log(text):
 
 
 if __name__ == '__main__':
+    log("""
+##############################
+
+  Creating CSS Documentation
+
+##############################
+""")
     import imp
     settings_file = os.path.abspath('./cssdoc_settings.py')
 
     SETTINGS = imp.load_source('SETTINGS', settings_file)
+    if not hasattr(SETTINGS, 'JINJA2_TEMPLATE_FILE'):
+        log('No template found! Using default')
+        this_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        SETTINGS.JINJA2_TEMPLATE_FILE = os.path.join(this_dir, 'template.html')
+        log(SETTINGS.JINJA2_TEMPLATE_FILE)
+
     css_doc = CssDoc()
     css_doc.log = log
     css_doc.parse(SETTINGS)

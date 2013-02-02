@@ -68,6 +68,12 @@ Create a file called cssdoc_settings.py where you want your documentation genera
 By default, it will create a directory next to this file called 'output'
 
 	#
+	# Project ownership data
+	#
+	CLIENT = ''
+	PROJECT_NAME = ''
+	PROJECT_NUMBER = 1
+	#
 	# Full path to the root of your SCSS
 	#
 	SCSS_ROOT = ''

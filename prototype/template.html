@@ -1,65 +1,82 @@
-<!--
-	This is a Jinja2 template. See http://jinja.pocoo.org/docs/templates/ for details
--->
-<html>
+<!DOCTYPE html>
+<!--[if lt IE 7]>	<html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>		<html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>		<html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
 	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<title>Project Overview: {{ settings.PROJECT_NAME }}</title>
+		<meta name="description" content="" />
+		<meta name="viewport" content="width=device-width" />
+
+		<!--
+			This is a Jinja2 template. See http://jinja.pocoo.org/docs/templates/ for details
+		-->
+
 		<!-- link in copied stylesheets -->
 		{% for loop_stylesheet in settings.CSS_OUTPUT_FILES %}
 			<link rel="stylesheet" href="{{ loop_stylesheet }}" ></link>
 		{% endfor %}
 	</head>
 
-	<body>
-		<!-- Loop through each partial -->
-		{% for loop_partial in items %}
+	<body class="t_dev">
+		<div class="layoutWrapper">
+			<header class="layoutHeader" role="banner">
+				<h1 class="pageTitle">Templates - {{ settings.CLIENT }} {{ settings.PROJECT_NAME }} {{ settings.PROJECT_NUMBER }}</h1>
+			</header>
 
-			<!-- Output the partial filename -->
-			<div>{{ loop_partial.partial_name }}</div>
+			<!-- Loop through each partial -->
+			{% for loop_partial in items %}
 
-			<!-- Now loop through each CSS atom in the partial -->
-			{% for loop_item in loop_partial.items %}
-				<div>
-					<h2>{{ loop_item.selector }}</h2>
+				<!-- Output the partial filename -->
+				<div>{{ loop_partial.partial_name }}</div>
 
-					<!-- attempt to put the main description first -->
-					{% for comment_key,comment_value in loop_item.comments.items() %}
-						{% if comment_key == 'main_description' %}
-							<p>{{ comment_value}}</p>
-						{% endif %}
-					{% endfor %}
+				<!-- Now loop through each CSS atom in the partial -->
+				{% for loop_item in loop_partial.items %}
+					<div>
+						<h2>{{ loop_item.selector }}</h2>
 
-					<!-- Output all other comment tags -->
-					<p>
+						<!-- attempt to put the main description first -->
 						{% for comment_key,comment_value in loop_item.comments.items() %}
-
-							<!-- Example should show the escaped HTML plus what it looks like? -->
-							{% if comment_key == 'example' %}
-								<h3>Example</h3>
-								<div>
-									{{ comment_value }}
-								</div>
-
-								<h3>HTML for this</h3>
-								<pre><code>{{ comment_value|e }}</code></pre>
-
-							{% elif comment_key == 'main_description' %}
-
-								<!-- Ignore main_description, we added it above -->
-
-							{% else %}
-								<!-- Output everything else -->
-								<div>
-									<strong>{{ comment_key }}</strong> <span>{{ comment_value }}</span>
-								</div>
+							{% if comment_key == 'main_description' %}
+								<p>{{ comment_value}}</p>
 							{% endif %}
 						{% endfor %}
-					</p>
+
+						<!-- Output all other comment tags -->
+						<p>
+							{% for comment_key,comment_value in loop_item.comments.items() %}
+
+								<!-- Example should show the escaped HTML plus what it looks like? -->
+								{% if comment_key == 'example' %}
+									<h3>Example</h3>
+									<div>
+										{{ comment_value }}
+									</div>
+
+									<h3>HTML for this</h3>
+									<pre><code>{{ comment_value|e }}</code></pre>
+
+								{% elif comment_key == 'main_description' %}
+
+									<!-- Ignore main_description, we added it above -->
+
+								{% else %}
+									<!-- Output everything else -->
+									<div>
+										<strong>{{ comment_key }}</strong> <span>{{ comment_value }}</span>
+									</div>
+								{% endif %}
+							{% endfor %}
+						</p>
 
 
-					<hr/>
-				</div>
+						<hr/>
+					</div>
 
+				{% endfor %}
 			{% endfor %}
-		{% endfor %}
+		</div>
 	</body>
 </html>

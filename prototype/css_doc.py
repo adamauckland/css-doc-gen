@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # coding=utf-8
 # Copyright (c) 2013 Adam Auckland
 #
@@ -24,6 +25,8 @@
 import os
 import os.path
 import sys
+import jinja2
+import shutil
 
 
 class CssItem(object):
@@ -46,7 +49,11 @@ class CssItem(object):
     I'm not really sure how the parser will handle them
 
     """
-    known_comment_tags = ['description', 'example', 'version', 'class', 'author', 'type', 'notes', 'date', 'section']
+    known_comment_tags = [
+        'description', 'example', 'version', 'class',
+        'author', 'type', 'notes', 'date', 'section',
+        'main_description'  # if there is no tag, assume it's the top description
+    ]
 
     def __init__(self):
         self.selector = None
@@ -82,6 +89,8 @@ class CssItem(object):
         template = """
             <div>
                 <h2> %(selector)s </h2>
+
+                <div> %(main_description)s </div>
 
                 <div>
                     <h3>Description</h3>
@@ -189,10 +198,10 @@ class CssChomper(object):
         If a line contains a comment and no @key, attempt to concatenate
         onto the last found key.
         """
-        last_key = None
+        last_key = 'main_description'
+        self.comment_buffer[last_key] = ''
         is_in_comments = False
         for line in self.selector_text.split('\n'):
-            print(line)
             comment_index = line.find('//')
             block_comment_index = line.find('/*')
 
@@ -202,7 +211,7 @@ class CssChomper(object):
 
             if is_in_comments:
                 if line.find('*/') != -1:
-                    print('coming out of comments')
+                    line = line[line.find('*/') + 2:]
                     is_in_comments = False
                     comment_index = -1
                     block_comment_index = -1
@@ -214,7 +223,6 @@ class CssChomper(object):
             #
             if comment_index > -1:
                 line = line[comment_index + 2:]
-                print('\t%s' % line)
                 at_index = line.find('@')
                 if at_index != -1:
                     at_split = line.split('@')
@@ -237,7 +245,7 @@ class ParseReader(object):
         self.css_match_buffer = []
         self.css_objects = []
 
-    def parse_doc(self, filename, data):
+    def parse_doc(self, filename, data, SETTINGS):
         """
         Generate documentation for data.
 
@@ -254,45 +262,82 @@ class ParseReader(object):
 
         for loop_item in chomp_stack:
             if len(loop_item.comments) > 0:
-                internal_items.append(unicode(loop_item))
+                loop_item.filename = filename
+                internal_items.append(loop_item)
 
-        output = """
-        <html>
-            <head>
-                <link rel="stylesheet" href="style.css" />
-            </head>
-            <body>
-                <div>File: %s</div>
-                <div>%s</div>
-            </body>
-        </html>
+        return internal_items
 
-        """ % (filename, '\n'.join(internal_items))
 
-        if len(internal_items) > 0:
-            output_directory = os.path.abspath('./output')
-            output_file = os.path.join(output_directory, filename.replace('/', '_') + '.html')
-
-            with open(output_file, 'wt') as output_handle:
-                output_handle.write(output)
+class Partial(object):
+    def __init__(self, partial_name):
+        self.partial_name = partial_name
+        self.items = []
 
 
 class CssDoc(object):
-    def parse(self, root_directory, css_file):
+    def parse(self, SETTINGS):
+        root_directory = SETTINGS.SCSS_ROOT
+        css_files = SETTINGS.CSS_FILES
+        SETTINGS.CSS_OUTPUT_FILES = []
+        template_file = SETTINGS.JINJA2_TEMPLATE_FILE
+
+        with open(template_file, 'rt') as template_handle:
+            SETTINGS.template_data = template_handle.read()
+            print('read template')
+
         output_directory = os.path.abspath('./output')
+        self.log('Output to %s' % output_directory)
+        shutil.rmtree(output_directory)
+
         if not os.path.exists(output_directory):
             os.makedirs(output_directory)
-        with open(css_file, 'rt') as read_handle:
-            read_buffer = read_handle.read()
-            with open(os.path.join(output_directory, 'style.css'), 'wt') as write_handle:
-                write_handle.write(read_buffer)
+
+        file_index = 0
+        for css_file in css_files:
+            file_index += 1
+            with open(css_file, 'rt') as read_handle:
+                read_buffer = read_handle.read()
+                css_output_file = 'style%s.css' % file_index
+
+                with open(os.path.join(output_directory, css_output_file), 'wt') as write_handle:
+                    write_handle.write(read_buffer)
+                    SETTINGS.CSS_OUTPUT_FILES.append(css_output_file)
+                    print('%s --> %s' % (css_file, css_output_file))
 
         self.log('Parsing directory: %s' % root_directory)
         files = {}
         self.scan_directory(files, root_directory, root_directory)
 
+        items = []
         for loop_key, loop_item in files.items():
-            self.parse_file(loop_key, loop_item)
+            partial = Partial(loop_key)
+            partial.items = self.parse_file(loop_key, loop_item, SETTINGS)
+            if len(partial.items) > 0:
+                items.append(partial)
+
+        #
+        # now output
+        #
+        template_instance = jinja2.Template(SETTINGS.template_data)
+        output = template_instance.render({
+            'items': items,
+            'settings': SETTINGS
+        })
+
+        if len(items) > 0:
+            output_directory = os.path.abspath('./output')
+            output_file = os.path.join(output_directory, 'output.html')
+
+            with open(output_file, 'wt') as output_handle:
+                output_handle.write(output)
+        #
+        # copy assets over
+        #
+        self.log('Copying assets')
+        for asset_dir in SETTINGS.ASSETS:
+            asset_dir_name = asset_dir[asset_dir.rfind('/') + 1:]
+            self.log('%s --> %s' % (asset_dir, os.path.abspath('./output/%s' % asset_dir_name)))
+            shutil.copytree(asset_dir, os.path.abspath('./output/%s' % asset_dir_name))
 
     def scan_directory(self, files, root_directory, new_directory):
         """
@@ -313,10 +358,10 @@ class CssDoc(object):
         except Exception, ex:
             self.log('Exception %s' % ex)
 
-    def parse_file(self, loop_key, loop_data):
+    def parse_file(self, loop_key, loop_data, SETTINGS):
         parser = ParseReader()
         parser.log = self.log
-        parser.parse_doc(loop_key, loop_data)
+        return parser.parse_doc(loop_key, loop_data, SETTINGS)
 
 
 def log(text):
@@ -324,10 +369,10 @@ def log(text):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print('Pass in the root of SCSS and filepath to css file ')
-    else:
-        root_directory = sys.argv[1]
-        css_doc = CssDoc()
-        css_doc.log = log
-        css_doc.parse(root_directory, sys.argv[2])
+    import imp
+    settings_file = os.path.abspath('./cssdoc_settings.py')
+
+    SETTINGS = imp.load_source('SETTINGS', settings_file)
+    css_doc = CssDoc()
+    css_doc.log = log
+    css_doc.parse(SETTINGS)

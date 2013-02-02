@@ -54,6 +54,7 @@
 									<div>
 										{{ comment_value }}
 									</div>
+									<div style="clear:both;">&nbsp;</div>
 
 									<h3>HTML for this</h3>
 									<pre><code>{{ comment_value|e }}</code></pre>
@@ -71,8 +72,8 @@
 							{% endfor %}
 						</p>
 
-
-						<hr/>
+						<!-- nasty hacky way to add space -->
+						<br/><br/><hr/>
 					</div>
 
 				{% endfor %}

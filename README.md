@@ -1,7 +1,17 @@
 css-doc-gen
 ===========
 
-Useful documentation from CSS. This is in no way a finished product, just a starting point. The script assumes SCSS at the moment.
+Generate useful documentation from CSS. This is in no way a finished product, just a starting point. The script assumes SCSS at the moment.
+
+Requirements
+------------
+
+Currently uses [http://jinja.pocoo.org/docs/](Jinja2) for the templating. Install it by:
+
+	easy_install Jinja2
+
+Annotate your SCSS
+------------------
 
 Use a JSDoc style commenting system to apply tags to your CSS. Currently supported tags:
 
@@ -15,9 +25,38 @@ Use a JSDoc style commenting system to apply tags to your CSS. Currently support
 	@date
 	@section
 
-Example supports multiple lines.
+@example supports multiple lines
 
-Usage:
+Here is an example of some annotated SCSS:
+
+	/**
+	 * You can put untagged comments and they will still appear
+	 *
+	 * @description Creates the styling for the site page title
+	 *
+	 * @author Benny Crivens
+	 * @version 0.1
+	 * @date 2013-01-31
+	 *
+	 * @example
+	 * <h2 class="pageTitle">An example pagetitle usage</h2>
+	 *
+	 * @type layout class
+	 * @notes
+	 */
+	.layoutFooter {
+		clear: both;
+		@include content-container;
+		.layoutWrapper {
+			margin-top: 1em;
+			padding: 1em;
+			text-align: center;
+		}
+	}
+
+
+Running the generator
+---------------------
 
 	Simply call css_doc.py from a directory containing a cssdoc_settings.py file
 

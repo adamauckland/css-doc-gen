@@ -286,15 +286,20 @@ class CssDoc(object):
         SETTINGS.CSS_OUTPUT_FILES = []
         template_file = SETTINGS.JINJA2_TEMPLATE_FILE
 
-        with open(template_file, 'rt') as template_handle:
+        with open(os.path.abspath(template_file), 'rt') as template_handle:
             SETTINGS.template_data = template_handle.read()
             print('read template')
 
         output_directory = os.path.abspath('./output')
         self.log('Output to %s' % output_directory)
-        shutil.rmtree(output_directory)
+        if os.path.exists(output_directory):
+            shutil.rmtree(output_directory)
+
+        import time
+        time.sleep(1)
 
         if not os.path.exists(output_directory):
+            self.log('Create %s' % output_directory)
             os.makedirs(output_directory)
 
         file_index = 0
@@ -334,7 +339,7 @@ class CssDoc(object):
             output_file = os.path.join(output_directory, 'output.html')
 
             with open(output_file, 'wt') as output_handle:
-                output_handle.write(output)
+                output_handle.write(output.encode('utf-8'))
         #
         # copy assets over
         #
@@ -355,7 +360,7 @@ class CssDoc(object):
                     self.scan_directory(files, root_directory, loop_filename)
                 if os.path.isfile(loop_filename):
                     with open(loop_filename, 'rt') as file_handle:
-                        read_buffer = file_handle.read()
+                        read_buffer = file_handle.read().decode('latin-1')
                     file_key = loop_filename[len(root_directory):]
                     files[file_key] = read_buffer
                     bytes = len(read_buffer)
